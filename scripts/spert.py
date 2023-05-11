@@ -414,7 +414,7 @@ def gen_geometry(mat_dict, config):
     c20.region = +s211 & -s212 & +s213 & -s214 & +s901 & -s902
     c21.region = +s221 & -s222 & +s223 & -s224 & (-s211 | +s212 | -s213 | +s214) & +s901 & -s902
     c22.region = +s231 & -s232 & +s233 & -s234 & (-s221 | +s222 | -s223 | +s224) & +s901 & -s902
-    # FIX: ADD SPRING AND PLUG
+    # TODO: ADD SPRING AND PLUG
 
     u2 = openmc.Universe(name='Fuel assembly', universe_id=2, cells=[c20, c21, c22])
 
@@ -962,29 +962,36 @@ def gen_tallies(config):
     #############################
     # tally scores and nuclides #
     #############################
+#    tally_scores = [
+#        "absorption",
+#        "absorption",
+#        "absorption",
+#        "fission",
+#        "fission",
+#        "flux",
+#        "nu-fission",
+#        "scatter",
+#        "scatter",
+#        "scatter"
+#    ]
+#    tally_nuclides = [
+#        "All",
+#        "U235",
+#        "U238",
+#        "U235",
+#        "U238",
+#        "All",
+#        "All",
+#        "U235",
+#        "U238",
+#        "H1"
+#    ]
+
     tally_scores = [
-        "absorption",
-        "absorption",
-        "absorption",
         "fission",
-        "fission",
-        "flux",
-        "nu-fission",
-        "scatter",
-        "scatter",
-        "scatter"
     ]
     tally_nuclides = [
-        "All",
         "U235",
-        "U238",
-        "U235",
-        "U238",
-        "All",
-        "All",
-        "U235",
-        "U238",
-        "H1"
     ]
 
     #################
@@ -1015,8 +1022,8 @@ def gen_tallies(config):
 
     # generate tallies
     tallies = openmc.Tallies()
-    # num_scores = len(tally_scores)
-    num_scores = 10
+    num_scores = len(tally_scores)
+    # num_scores = 10
     for i in range(num_scores):
         for j in range(len(cell_filters_all)):
             single_tally = openmc.Tally()
@@ -1024,7 +1031,7 @@ def gen_tallies(config):
             if j == 1:  # pincells with flux suppressors in full core / quarter core - to ignore title in tallies
                 single_tally.name = single_tally.name+'_2'
             single_tally.filters.append(cell_filters_all[j])
-            single_tally.filters.append(energy_filter)
+#            single_tally.filters.append(energy_filter)
             single_tally.scores.append(tally_scores[i])
             if tally_nuclides[i] != "All":
                 single_tally.nuclides = [tally_nuclides[i]]
