@@ -10,47 +10,29 @@ import spert_tallies_parse
 
 
 def main(config_file='spert_config.ini'):
-
+    
+    ap = ArgumentParser(description="A configurable script for generating the SPERT-3 model")
+    ap.add_argument("-mt", "--model_type", type=str, default="full_core",
+                    help="Model type options: full_core, quarter_core, pincell, fuel_assembly, control_rod, transient_rod")
+    ap.add_argument("-p", "--plot", default=False, action="store_true",
+                    help="If present, plot the model after generation.")
+    ap.add_argument("-r", "--run", default=False, action="store_true",
+                    help="If present, run OpenMC after generating the model")
+    args = ap.parse_args()
+ 
     # import configuration
     config = ConfigParser()
-
     # assume config file is in current location with script
     if os.path.exists(config_file):
         config.read(config_file)
     # try location with script if not
     else:
         config.read(Path(__file__).parent / config_file)
-
-    # # assume config file is in location with script
-    # try:
-    #     config.read(Path(__file__).parent / config_file)
-    # except IOError:
-    # # try current location if not
-    #     config.read(config_file)
-
-    ap = ArgumentParser(description="A configurable script for generating the SPERT-3 model")
-
-    ap.add_argument("-c", "--config", type=str, default="FULL_CORE",
-                    help="Core configuration. Should be one of " + str(config.sections()))
-
-    ap.add_argument("-p", "--plot", default=False, action="store_true",
-                    help="If present, plot the model after generation.")
-
-    ap.add_argument("-r", "--run", default=False, action="store_true",
-                    help="If present, run OpenMC after generating the model")
-
-    args = ap.parse_args()
-
-    custom_config = config[args.config]
-
-    config = config['FULL_CORE']
-
-    # update any custome values over the default configuration values
-    for key, val in custom_config.items():
-        config[key] = val
+    config = config['SPERT_config']
+    config['model_type'] = args.model_type
 
     # Some output for reference
-    print("Configuration: {}".format(args.config))
+    print("Model type: {}".format(config['model_type']))
     print("Core dimensions: {}".format(config['core_dimensions']))
     print("TR_config: {}".format(config['TR_config']))
     print("CR_config: {}".format(config['CR_config']))

@@ -100,7 +100,6 @@ def gen_materials(config):
     use_sab = config.getboolean('use_sab')
     if config['core_condition'] == 'CZP':  # Cold Zero Power
         fuel_temp = 294.0
-        print(fuel_temp) #TODO delete
         core_temp = 294.0
     elif config['core_condition'] == 'HZP':  # Hot Zero Power
         fuel_temp = 560.0
@@ -108,7 +107,6 @@ def gen_materials(config):
     elif config['core_condition'] == 'vartemp':  # choose temperatures
         #fuel_temp = config['fuel_temp']
         fuel_temp = 294.0
-        print(fuel_temp) #TODO delete
         #core_temp = config['core_temp']
         core_temp = 294.0
 
@@ -371,11 +369,11 @@ def gen_geometry(mat_dict, config):
     c161 = openmc.Cell(cell_id=161, name="pincell only - WITHOUT flux suppressor")
     c161.region = +s151 & -s152 & +s153 & -s154 & +s901 & -s902
     c161.fill = u11
-    u110 = openmc.Universe(universe_id=110, cells=[c161])
+    u110 = openmc.Universe(universe_id=110, cells=[c161])  # universe of pincell WITHOUT flux suppressor
     c162 = openmc.Cell(cell_id=162, name="pincell only - WITH flux suppressor")
     c162.region = +s151 & -s152 & +s153 & -s154 & +s901 & -s902
     c162.fill = u12
-    u120 = openmc.Universe(universe_id=120, cells=[c162])
+    u120 = openmc.Universe(universe_id=120, cells=[c162])  # universe of pincell WITH flux suppressor
 
     if config['model_type'] == 'pincell':
         root_univ = u110
