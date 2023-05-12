@@ -8,7 +8,7 @@ energy_structure_path = Path(__file__).parent / energy_structure_filename
 ###################
 # Core parameters #
 ###################
-# ALL UNITS: centimeters
+# All units: centimeters
 
 # Pincell
 pincell_fuel_radius = 0.21 * 2.54
@@ -85,31 +85,18 @@ core_height = 52.75 * 2.54  # height of core (end plugs)
 
 def gen_materials(config):
     """
-    Generates HolosGen Reactor materials.
-
+    Generates Reactor materials.
     Returns
     -------
-
     mat_dict : dictionary
-        A dictionary of materials in the mats list
-        constructed using the variable names of the
-        materials generated below.
+        A dictionary of materials in the mats list constructed using the 
+        variable names of the materials generated below.
     """
 
     # Configuration Options
     use_sab = config.getboolean('use_sab')
-    if config['core_condition'] == 'CZP':  # Cold Zero Power
-        fuel_temp = 294.0
-        core_temp = 294.0
-    elif config['core_condition'] == 'HZP':  # Hot Zero Power
-        fuel_temp = 560.0
-        core_temp = 560.0
-    elif config['core_condition'] == 'vartemp':  # choose temperatures
-        #fuel_temp = config['fuel_temp']
-        fuel_temp = 294.0
-        #core_temp = config['core_temp']
-        core_temp = 294.0
-
+    fuel_temp = config.getint('fuel_temp')
+    core_temp = config.getint('core_temp')
 
     materials = []
 
@@ -125,23 +112,18 @@ def gen_materials(config):
 
     # moderator: light water (table A.2)
     mat_mod = openmc.Material(name='moderator', temperature=core_temp, material_id=2)
-    if config['core_condition'] == 'CZP':  # Cold Zero Power
-        mat_mod.add_nuclide('H1',  6.625258E-02, 'ao')
-        mat_mod.add_nuclide('O16', 3.340031E-02, 'ao')
-    elif config['core_condition'] == 'HZP':  # Hot Zero Power
-        mat_mod.add_nuclide('H1',  5.091219E-02, 'ao')
-        mat_mod.add_nuclide('O16', 2.545609E-02, 'ao')
-    elif config['core_condition'] == 'vartemp':  # choose temperatures
-        #TODO This part needs correction for density depending on temperature!
-        mat_mod.add_nuclide('H1', 6.625258E-02, 'ao')
-        mat_mod.add_nuclide('O16', 3.340031E-02, 'ao')
+    mat_mod.add_nuclide('H1',  6.625258E-02, 'ao')
+    mat_mod.add_nuclide('O16', 3.340031E-02, 'ao')
+    # TODO: apply temperature-dependent water density
+    # Specifically, for HZP (T=560F), atomic densities are: 
+    # H1: 5.091219E-02, O16: 2.545609E-02
 
     if use_sab:
         mat_mod.add_s_alpha_beta('c_H_in_H2O')
     mat_mod.set_density('sum')
     materials.append(mat_mod)
 
-    # filler (and upper part of transient rod): SS304 stainless steel (table A.3)
+    # Filler (and upper part of transient rod): SS304 stainless steel (table A.3)
     mat_filler = openmc.Material(name='filler', temperature=core_temp, material_id=3)
     mat_filler.add_nuclide('C0',   1.592403E-04, 'ao')
     mat_filler.add_element('Cr',   1.747206E-02, 'ao')
@@ -155,7 +137,7 @@ def gen_materials(config):
     mat_filler.set_density('sum')
     materials.append(mat_filler)
 
-    # radial shield: SS304L stainless steel (table A.4)
+    # Radial shield: SS304L stainless steel (table A.4)
     mat_shield = openmc.Material(name='radial shield', temperature=core_temp, material_id=4)
     mat_shield.add_nuclide('C0',   5.971510E-05, 'ao')
     mat_shield.add_element('Cr',   1.747206E-02, 'ao')
@@ -169,7 +151,7 @@ def gen_materials(config):
     mat_shield.set_density('sum')
     materials.append(mat_shield)
 
-    # fuel clad: SS348 stainless steel (table A.5)
+    # Fuel clad: SS348 stainless steel (table A.5)
     mat_clad = openmc.Material(name='clad', temperature=core_temp, material_id=5)
     mat_clad.add_nuclide('C0',    1.604436E-04)
     mat_clad.add_element('Cr',    1.667756E-02)
@@ -185,7 +167,7 @@ def gen_materials(config):
     mat_clad.set_density('sum')
     materials.append(mat_clad)
 
-    # absorber: SS304B5 stainless steel (1.35% borated steel) (table A.6)
+    # Absorber: SS304B5 stainless steel (1.35% borated steel) (table A.6)
     mat_absorber = openmc.Material(name='absorber', temperature=core_temp, material_id=6)
     mat_absorber.add_nuclide('B10',  6.324854E-03, 'ao')
     mat_absorber.add_nuclide('C0',   1.562320E-04, 'ao')
@@ -201,7 +183,7 @@ def gen_materials(config):
     mat_absorber.set_density('sum')
     materials.append(mat_absorber)
 
-    # bioligical shield: lead (table A.7)
+    # Bioligical shield: lead (table A.7)
     mat_bioShield = openmc.Material(name='bio-shield', temperature=core_temp, material_id=7)
     mat_bioShield.add_nuclide('Pb207', 3.306467E-02, 'ao')
     mat_bioShield.add_nuclide('Sb121', 5.663191E-06, 'ao')
@@ -212,7 +194,7 @@ def gen_materials(config):
     mat_bioShield.set_density('sum')
     materials.append(mat_bioShield)
 
-    # guide tube: Zircaloy-2 (table A.8)
+    # Guide tube: Zircaloy-2 (table A.8)
     mat_GT = openmc.Material(name='Guide tube', temperature=core_temp, material_id=8)
     mat_GT.add_nuclide('Fe54',  5.5735E-06, 'ao')
     mat_GT.add_nuclide('Fe56',  8.7491E-05, 'ao')
@@ -241,6 +223,7 @@ def gen_materials(config):
     mat_GT.set_density('sum')
     materials.append(mat_GT)
 
+    # Fuel-assembly 5X5 box
     mat_FA5X5box = openmc.Material(name='FA5X5 box', temperature=core_temp, material_id=9)
     mat_FA5X5box.add_nuclide('C0',    1.203327E-04, 'ao')
     mat_FA5X5box.add_element('Cr',    1.250817E-02, 'ao')
@@ -260,14 +243,14 @@ def gen_materials(config):
     mat_FA5X5box.set_density('sum')
     materials.append(mat_FA5X5box)
 
-    # helium: between fuel and clad
+    # Helium: between fuel and clad
     mat_helium = openmc.Material(name='helium', temperature=core_temp, material_id=10)
     mat_helium.add_nuclide('He3', 4.80890E-10, 'ao')
     mat_helium.add_nuclide('He4', 2.40440E-04, 'ao')
     mat_helium.set_density('sum')
     materials.append(mat_helium)
 
-    # expansion spring: clad with density 5% (homogenized)
+    # Expansion spring: clad with density 5% (homogenized)
     mat_spring = openmc.Material(name='expansion spring', temperature=core_temp, material_id=11)
     mat_spring.add_nuclide('C0',    8.022180E-06, 'ao')
     mat_spring.add_element('Cr',    8.338779E-04, 'ao')
@@ -298,17 +281,13 @@ def gen_materials(config):
 
 def gen_geometry(mat_dict, config):
     """
-    Generates the SPERT-3 reactor geometry.
-
+    Generates the SPERT reactor geometry.
     Parameters
     ----------
-
     mat_dict : dict
         A dictionary of OpenMC materials.
-
     config : ConfigParser
         A config parser of spert
-
     Returns
     -------
     openmc.Geometry
@@ -318,23 +297,23 @@ def gen_geometry(mat_dict, config):
     valid_mats = isinstance(mat_dict, dict) and all(isinstance(v, openmc.Material) for v in mat_dict.values())
     assert valid_mats, "Please provide a dictionary of OpenMC materials for mat_dict parameter."
 
-    # Z-planes for fuel assembly
+    # Axial planes (top and bottom)
     s901 = openmc.ZPlane(z0=0.0, surface_id=901)
     s902 = openmc.ZPlane(z0=FA_height, surface_id=902)
-    if config['core_dimensions'] == '2D':
-        s901.boundary_type = 'reflective'
-        s902.boundary_type = 'reflective'
-    elif config['core_dimensions'] == '3D':
-        s901.boundary_type = 'vacuum'
-        s902.boundary_type = 'vacuum'
+    match config['core_dimensions']:
+        case '2D':
+            axial_BC = 'reflective'
+        case 'sD':
+            axial_BC = 'vacuum'
+    s901.boundary_type = s902.boundary_type = axial_BC
 
     ###########
-    # pincell #
+    # Pincell #
     ###########
     s11 = openmc.ZCylinder(r=pincell_fuel_radius, surface_id=11)  # fuel inner radius
     s12 = openmc.ZCylinder(r=pincell_fuel_radius + pincell_airgap_width, surface_id=12)  # clad inner radius
     s13 = openmc.ZCylinder(r=pincell_fuel_radius + pincell_airgap_width + pincell_clad_width,
-                           surface_id=13)  # clad out rad
+                           surface_id=13)  # clad outer rad
     s141 = openmc.XPlane(x0=-(pincell_pitch-flux_suppr_width)/2.0, surface_id=141)
     s142 = openmc.XPlane(x0=+(pincell_pitch-flux_suppr_width)/2.0, surface_id=142)
     s143 = openmc.YPlane(y0=-(pincell_pitch-flux_suppr_width)/2.0, surface_id=143)
@@ -347,7 +326,7 @@ def gen_geometry(mat_dict, config):
         for surf in [s151, s152, s153, s154]:
             surf.boundary_type = 'reflective'
 
-    # pincell WITHOUT flux suppressor:
+    # Pincell WITHOUT flux suppressor:
     c110 = openmc.Cell(cell_id=110, fill=mat_dict["mat_fuel"], region=-s11)
     c120 = openmc.Cell(cell_id=120, fill=mat_dict["mat_helium"], region=+s11 & -s12)
     c130 = openmc.Cell(cell_id=130, fill=mat_dict["mat_clad"], region=+s12 & -s13)
@@ -356,7 +335,7 @@ def gen_geometry(mat_dict, config):
     c151.region = (-s141 | +s142 | -s143 | +s144) & +s151 & -s152 & +s153 & -s154
     u11 = openmc.Universe(universe_id=11, cells=[c110, c120, c130, c140, c151])
 
-    # pincell WITH flux suppressor:
+    # Pincell WITH flux suppressor:
     c111 = openmc.Cell(cell_id=111, fill=mat_dict["mat_fuel"], region=-s11)
     c121 = openmc.Cell(cell_id=121, fill=mat_dict["mat_helium"], region=+s11 & -s12)
     c131 = openmc.Cell(cell_id=131, fill=mat_dict["mat_clad"], region=+s12 & -s13)
@@ -365,20 +344,16 @@ def gen_geometry(mat_dict, config):
     c152.region = (-s141 | +s142 | -s143 | +s144) & +s151 & -s152 & +s153 & -s154
     u12 = openmc.Universe(universe_id=12, cells=[c111, c121, c131, c141, c152])
 
-    # define container cell and universe of pincell for tallies
+    # Define universe of pincell WITHOUT flux suppressor
     c161 = openmc.Cell(cell_id=161, name="pincell only - WITHOUT flux suppressor")
     c161.region = +s151 & -s152 & +s153 & -s154 & +s901 & -s902
     c161.fill = u11
-    u110 = openmc.Universe(universe_id=110, cells=[c161])  # universe of pincell WITHOUT flux suppressor
+    u110 = openmc.Universe(universe_id=110, cells=[c161])
+    # Define universe of pincell WITH flux suppressor
     c162 = openmc.Cell(cell_id=162, name="pincell only - WITH flux suppressor")
     c162.region = +s151 & -s152 & +s153 & -s154 & +s901 & -s902
     c162.fill = u12
-    u120 = openmc.Universe(universe_id=120, cells=[c162])  # universe of pincell WITH flux suppressor
-
-    if config['model_type'] == 'pincell':
-        root_univ = u110
-        geom = openmc.Geometry(root_univ)
-        return geom
+    u120 = openmc.Universe(universe_id=120, cells=[c162])
 
     ###########################
     # Fuel Assembly (FA) 5X5  #
@@ -395,9 +370,7 @@ def gen_geometry(mat_dict, config):
     s232 = openmc.XPlane(x0=+FA5X5_total_sec/2.0, surface_id=232)
     s233 = openmc.YPlane(y0=-FA5X5_total_sec/2.0, surface_id=233)
     s234 = openmc.YPlane(y0=+FA5X5_total_sec/2.0, surface_id=234)
-    if config['model_type'] in ['fuel_assembly',
-                                'control_rod',
-                                'transient_rod']:
+    if config['model_type'] in ['fuel_assembly', 'control_rod', 'transient_rod']:
         for surf in [s231, s232, s233, s234]:
             surf.boundary_type = 'reflective'
 
@@ -412,14 +385,9 @@ def gen_geometry(mat_dict, config):
     c20.region = +s211 & -s212 & +s213 & -s214 & +s901 & -s902
     c21.region = +s221 & -s222 & +s223 & -s224 & (-s211 | +s212 | -s213 | +s214) & +s901 & -s902
     c22.region = +s231 & -s232 & +s233 & -s234 & (-s221 | +s222 | -s223 | +s224) & +s901 & -s902
-    # TODO: ADD SPRING AND PLUG
+    # TODO: add spring and plug
 
     u2 = openmc.Universe(name='Fuel assembly', universe_id=2, cells=[c20, c21, c22])
-
-    if config['model_type'] == 'fuel_assembly':
-        root_univ = u2
-        geom = openmc.Geometry(root_univ)
-        return geom
 
     ####################
     # Control Rod (CR) #
@@ -454,12 +422,6 @@ def gen_geometry(mat_dict, config):
     u31 = openmc.Universe(name='control rod - absorber in', universe_id=31)
     u31.add_cells([c300, c301, c302, c303, c304])
 
-    # control rod - Control In (CI)
-    if config['model_type'] == 'control_rod' and config['CR_config'] == 'CI':
-        root_univ = u31
-        geom = openmc.Geometry(root_univ)
-        return geom
-
     # Fuel Follower (FF)
     s341 = openmc.XPlane(x0=-FF_box_in_sec/2.0, surface_id=341)  # fuel follower (FF) box inner section
     s342 = openmc.XPlane(x0=+FF_box_in_sec/2.0, surface_id=342)
@@ -491,11 +453,6 @@ def gen_geometry(mat_dict, config):
     u33 = openmc.Universe(name='control rod - absorber out', universe_id=33)
     u33.add_cells([c3100, c311, c312, c313, c314, c315])
 
-    # control rod - Control Out (CO)
-    if config['model_type'] == 'control_rod' and config['CR_config'] == 'CO':
-        root_univ = u33
-        geom = openmc.Geometry(root_univ)
-        return geom
 
     # FF lattice (FA4X4) WITH flux suppressor
     l331 = openmc.RectLattice(lattice_id=331)
@@ -506,12 +463,6 @@ def gen_geometry(mat_dict, config):
     c3101.region = +s351 & -s352 & +s353 & -s354 & +s901 & -s902
     u34 = openmc.Universe(name='control rod - supressor in', universe_id=34)
     u34.add_cells([c3101, c311, c312, c313, c314, c315])
-
-    # control rod - Suppressor In (SI)
-    if config['model_type'] == 'control_rod' and config['CR_config'] == 'SI':
-        root_univ = u34
-        geom = openmc.Geometry(root_univ)
-        return geom
 
     ######################
     # Transient Rod (TR) #
@@ -569,11 +520,12 @@ def gen_geometry(mat_dict, config):
     c45.region = +s231 & -s232 & +s233 & -s234 & (+s452 | +s454) & +s901 & -s902
     c46 = openmc.Cell(cell_id=46)  # TR cruciform
     c46.region = +s231 & -s462 & +s233 & -s464 & (-s463 | -s461) & +s901 & -s902
-    if config['TR_config'] == 'TI':  # transient rod - absorber IN
-        c46.fill = mat_dict["mat_absorber"]
-    elif config['TR_config'] == 'TO':  # transient rod - absorber OUT
-        c46.fill = mat_dict["mat_filler"]
-
+    match config['TR_config']:
+        case 'TR_in':  # transient rod - absorber IN
+            c46.fill = mat_dict["mat_absorber"]
+        case 'TR_out':  # transient rod - absorber OUT
+            c46.fill = mat_dict["mat_filler"]
+        
     c471 = openmc.Cell(cell_id=471, fill=mat_dict["mat_mod"])  # water in cruciform GT part 1
     c471.region = +s461 & -s442 & +s463 & -s444 & (-s453 | -s451) & +s901 & -s902
     c472 = openmc.Cell(cell_id=472, fill=mat_dict["mat_mod"])  # water in cruciform GT part 2
@@ -599,11 +551,6 @@ def gen_geometry(mat_dict, config):
     u42 = openmc.Universe(name='transient rod NW', universe_id=42, cells=([c482]))
     u43 = openmc.Universe(name='transient rod SW', universe_id=43, cells=([c483]))
     u44 = openmc.Universe(name='transient rod SE', universe_id=44, cells=([c484]))
-
-    if config["model_type"] == 'transient_rod':
-        root_univ = u41
-        geom = openmc.Geometry(root_univ)
-        return geom
 
     #######################
     # Filler "assemblies" #
@@ -693,11 +640,11 @@ def gen_geometry(mat_dict, config):
     ####################################
     # Full Core and Quarter Core (NEq) #
     ####################################
-    if config["CR_config"] == 'CI':  # control rod - absorber IN
+    if config["CR_config"] == 'CR_in':  # control rod - absorber IN
         u3 = u31
-    if config["CR_config"] == 'CO':  # control rod - absorber OUT (fuel follower in)
+    if config["CR_config"] == 'CR_out':  # control rod - absorber OUT (fuel follower in)
         u3 = u33
-    if config["CR_config"] == 'SI':  # control rod - flux supressor IN (inside fuel follower)
+    if config["CR_config"] == 'CR_fs':  # control rod - flux supressor IN (inside fuel follower)
         u3 = u34
 
     # define four quarter-core lattices
@@ -763,7 +710,7 @@ def gen_geometry(mat_dict, config):
     c512 = openmc.Cell(cell_id=512, fill=mat_dict["mat_shield"], region=+s511 & -s512 & +s901 & -s902)  # vessel
     c513 = openmc.Cell(cell_id=513, fill=mat_dict["mat_bioShield"], region=+s512 & -s513 & +s901 & -s902)  # biological shielding
 
-    # full core lattice
+    # Full core lattice
     l5 = openmc.RectLattice(lattice_id=5)
     l5.pitch = (FA5X5_total_sec, FA5X5_total_sec)
     l5.lower_left = [-FA5X5_total_sec*6.0]*2
@@ -772,12 +719,7 @@ def gen_geometry(mat_dict, config):
     u51 = openmc.Universe(universe_id=51)
     u51.add_cells([c5011, c502, c503, c504, c505, c506, c507, c508, c509, c510, c511, c512, c513])
 
-    if config["model_type"] == 'full_core':
-        root_univ = u51
-        geom = openmc.Geometry(root_univ)
-        return geom
-
-    # quarter-core (NEq) lattice
+    # Quarter-core lattice (NEq=North-East-quarter)
     l6 = openmc.RectLattice(lattice_id=6)
     l6.pitch = (FA5X5_total_sec, FA5X5_total_sec)
     l6.lower_left = [0.0, 0.0]
@@ -795,10 +737,31 @@ def gen_geometry(mat_dict, config):
     u522 = openmc.Universe(universe_id=522)
     u522.add_cells([c522])
 
-    if config["model_type"] == 'quarter_core':
-        root_univ = u522
-        geom = openmc.Geometry(root_univ)
-        return geom
+    # Export geometry    
+    match config['model_type']:
+        case 'pincell':
+            root_univ = u110
+        case 'fuel_assembly':
+            root_univ = u2
+        case 'control_rod':
+            match config['CR_config']:
+                case 'CR_in':
+                    print('moo1')
+                    root_univ = u31
+                case 'CR_out':
+                    print('moo2')
+                    root_univ = u33
+                case 'CR_fs':
+                    print('moo3')
+                    root_univ = u34
+        case 'transient_rod':
+            root_univ = u41
+        case 'full_core':
+            root_univ = u51
+        case 'quarter_core':
+            root_univ = u52
+    geom = openmc.Geometry(root_univ)
+    return geom
 
 
 def gen_plots(mats):
@@ -810,7 +773,7 @@ def gen_plots(mats):
     openmc.Plots
         The set of plots to generate when running OpenMC.
     """
-    # set material colors
+    # Set material colors
     color_mapping = {'mat_fuel': (255, 255, 0),
                      'mat_mod': (0, 0, 255),
                      'mat_filler': (0, 100, 0),
@@ -838,10 +801,10 @@ def gen_plots(mats):
     # for div in axial_divs:
     for div in [FA_height/2.0]:
 
-        # offset from z plane just a bit
+        # Small Offset from z=0 plane
         z = div + 0.1
 
-        # wide slice through lattice
+        # Wide slice through lattice
         plot = openmc.Plot()
         plot.filename = "wide_cell_z={}".format(div)
         plot.basis = 'xy'
@@ -851,7 +814,7 @@ def gen_plots(mats):
         plot.pixels = wide_resolution
         plots.append(plot)
 
-        # wide slice through lattice (by material)
+        # Wide slice through lattice (by material)
         plot = openmc.Plot()
         plot.filename = "wide_mat_z={}".format(div)
         plot.basis = 'xy'
@@ -862,7 +825,7 @@ def gen_plots(mats):
         plot.pixels = wide_resolution
         plots.append(plot)
 
-        # zoomed image of central pin
+        # Enlarged image of central pin
         plot = openmc.Plot()
         plot.filename = "center_cell_z={}".format(div)
         plot.basis = 'xy'
@@ -872,7 +835,7 @@ def gen_plots(mats):
         plot.pixels = near_resolution
         plots.append(plot)
 
-        # zoomed image of central pin
+        # Enlarged image of central pin
         plot = openmc.Plot()
         plot.filename = "center_mat_z={}".format(div)
         plot.basis = 'xy'
@@ -886,7 +849,7 @@ def gen_plots(mats):
     xs = [0.0]
 
     for x in xs:
-        # wide axial slice
+        # Wide axial slice
         plot = openmc.Plot()
         plot.filename = "yz_cell_x={}".format(x)
         plot.basis = 'yz'
@@ -896,7 +859,7 @@ def gen_plots(mats):
         plot.pixels = (1000, 800)
         plots.append(plot)
 
-        # wide axial slice by material
+        # Wide axial slice by material
         plot = openmc.Plot()
         plot.filename = "yz_mat_x={}".format(x)
         plot.basis = 'yz'
@@ -918,7 +881,6 @@ def gen_plots(mats):
 def gen_settings(config):
     """
     Creates a settings object
-
     Returns
     -------
     openmc.Settings
@@ -927,7 +889,6 @@ def gen_settings(config):
 
     settings = openmc.Settings()
     settings.run_mode = 'eigenvalue'
-
     source = openmc.Source()
     ll = [-pincell_fuel_radius/2.0, -pincell_fuel_radius/2.0, -FA_height/2.0+1.0]
     ur = [pincell_fuel_radius/2.0, pincell_fuel_radius/2.0, FA_height/2.0-1.0]
@@ -951,7 +912,6 @@ def gen_settings(config):
 def gen_tallies(config):
     """
     Creates a tallies object 
-
     Returns
     -------
     openmc.Tallies
@@ -996,32 +956,31 @@ def gen_tallies(config):
     # tally filters #
     #################
 
-    # ENERGY filter
+    # Energy filter
     energy_groups = np.flip(np.array(np.loadtxt(energy_structure_path)))*1e6
     # energy_groups = np.array([0.0, 0.4, 9e3, 10e6])
     energy_filter = openmc.EnergyFilter(energy_groups)
 
-    # CELL filter for homogenized pincell
+    # Cell filter for homogenized pincell
     if config['model_type'] in ['pincell', 'fuel_assembly', 'transient_rod']:
         cell_filter_1 = openmc.DistribcellFilter([161])
         cell_filters_all = [cell_filter_1]
     elif config['model_type'] == 'control_rod':
-        if config['CR_config'] == 'CO':
+        if config['CR_config'] == 'CR_out':
             cell_filter_1 = openmc.DistribcellFilter([161])
-        elif config['CR_config'] == 'SI':
+        elif config['CR_config'] == 'CR_fs':
             cell_filter_1 = openmc.DistribcellFilter([162])
         cell_filters_all = [cell_filter_1]
     elif config['model_type'] in ['full_core', 'quarter_core']:
         cell_filter_1 = openmc.DistribcellFilter([161])  # WITHOUT flux supressor
         cell_filters_all = [cell_filter_1]
-        if config['CR_config'] == 'SI':
+        if config['CR_config'] == 'CR_fs':
             cell_filter_2 = openmc.DistribcellFilter([162])  # WITH flux supressor
             cell_filters_all.append(cell_filter_2)
 
-    # generate tallies
+    # Generate tallies
     tallies = openmc.Tallies()
     num_scores = len(tally_scores)
-    # num_scores = 10
     for i in range(num_scores):
         for j in range(len(cell_filters_all)):
             single_tally = openmc.Tally()
@@ -1054,6 +1013,4 @@ def gen_tallies(config):
     #         tallies.append(single_tally)
 
     return tallies
-
-
 
