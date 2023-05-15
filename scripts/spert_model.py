@@ -917,90 +917,75 @@ def gen_tallies(config):
     openmc.Tallies
         The tallies to use in the OpenMC run.
     """
-    #############################
-    # tally scores and nuclides #
-    #############################
-#    tally_scores = [
-#        "absorption",
-#        "absorption",
-#        "absorption",
-#        "fission",
-#        "fission",
-#        "flux",
-#        "nu-fission",
-#        "scatter",
-#        "scatter",
-#        "scatter"
-#    ]
-#    tally_nuclides = [
-#        "All",
-#        "U235",
-#        "U238",
-#        "U235",
-#        "U238",
-#        "All",
-#        "All",
-#        "U235",
-#        "U238",
-#        "H1"
-#    ]
-
-    tally_scores = [
-        "fission",
-    ]
-    tally_nuclides = [
-        "U235",
+    # Tally scores and nuclides - a list of 2-element lists: [a1, a2], where:
+    # a1 is tally score, e.g.: absorption, fission, flux, scatter
+    # a2 is tally nuclide, e.g: U235, U238, H1, ... Also - possible to choose 'All'
+    tally_scores_nuclides = [
+        # ["fission", "U235"],
+        # ["absorption", "U235"]
+        ["heating", "All"],
+        ["fission", "All"],        
     ]
 
-    #################
-    # tally filters #
-    #################
-
-    # Energy filter
-    energy_groups = np.flip(np.array(np.loadtxt(energy_structure_path)))*1e6
-    # energy_groups = np.array([0.0, 0.4, 9e3, 10e6])
-    energy_filter = openmc.EnergyFilter(energy_groups)
-
-    # Cell filter for homogenized pincell
-    if config['model_type'] in ['pincell', 'fuel_assembly', 'transient_rod']:
-        cell_filter_1 = openmc.DistribcellFilter([161])
-        cell_filters_all = [cell_filter_1]
-    elif config['model_type'] == 'control_rod':
-        if config['CR_config'] == 'CR_out':
-            cell_filter_1 = openmc.DistribcellFilter([161])
-        elif config['CR_config'] == 'CR_fs':
-            cell_filter_1 = openmc.DistribcellFilter([162])
-        cell_filters_all = [cell_filter_1]
-    elif config['model_type'] in ['full_core', 'quarter_core']:
-        cell_filter_1 = openmc.DistribcellFilter([161])  # WITHOUT flux supressor
-        cell_filters_all = [cell_filter_1]
-        if config['CR_config'] == 'CR_fs':
-            cell_filter_2 = openmc.DistribcellFilter([162])  # WITH flux supressor
-            cell_filters_all.append(cell_filter_2)
+    # Tally filters
+    cell_filter = openmc.DistribcellFilter([161])  # pincell without flux suppressor
 
     # Generate tallies
     tallies = openmc.Tallies()
-    num_scores = len(tally_scores)
-    for i in range(num_scores):
-        for j in range(len(cell_filters_all)):
-            single_tally = openmc.Tally()
-            single_tally.name = tally_scores[i]+'_'+tally_nuclides[i]
-            if j == 1:  # pincells with flux suppressors in full core / quarter core - to ignore title in tallies
-                single_tally.name = single_tally.name+'_2'
-            single_tally.filters.append(cell_filters_all[j])
-#            single_tally.filters.append(energy_filter)
-            single_tally.scores.append(tally_scores[i])
-            if tally_nuclides[i] != "All":
-                single_tally.nuclides = [tally_nuclides[i]]
-            tallies.append(single_tally)
+    num_tallies = len(tally_scores_nuclides)
+    for i in range(num_tallies):
+        tally_score = tally_scores_nuclides[i][0]
+        tally_nuclide = tally_scores_nuclides[i][1]
+        single_tally = openmc.Tally()
+        single_tally.name = tally_score + '_' + tally_nuclide
+        single_tally.filters.append(cell_filter)
+        single_tally.scores.append(tally_score)
+        if tally_nuclide != "All":
+            single_tally.nuclides = [tally_nuclide]
+        tallies.append(single_tally)
 
+    # TODO: this tallies is of older version, need to check
+    # Energy filter
+    # energy_groups = np.flip(np.array(np.loadtxt(energy_structure_path)))*1e6
+    # energy_groups = np.array([0.0, 0.4, 9e3, 10e6])
+    # energy_filter = openmc.EnergyFilter(energy_groups)
+    # Cell filter for homogenized pincell
+    # if config['model_type'] in ['pincell', 'fuel_assembly', 'transient_rod']:
+    #     cell_filter_1 = openmc.DistribcellFilter([161])
+    #     cell_filters_all = [cell_filter_1]
+    # elif config['model_type'] == 'control_rod':
+    #     if config['CR_config'] == 'CR_out':
+    #         cell_filter_1 = openmc.DistribcellFilter([161])
+    #     elif config['CR_config'] == 'CR_fs':
+    #         cell_filter_1 = openmc.DistribcellFilter([162])
+    #     cell_filters_all = [cell_filter_1]
+    # elif config['model_type'] in ['full_core', 'quarter_core']:
+    #     cell_filter_1 = openmc.DistribcellFilter([161])  # WITHOUT flux supressor
+    #     cell_filters_all = [cell_filter_1]
+    #     if config['CR_config'] == 'CR_fs':
+    #         cell_filter_2 = openmc.DistribcellFilter([162])  # WITH flux supressor
+    #         cell_filters_all.append(cell_filter_2)
+    # Generate tallies
+    # tallies = openmc.Tallies()
+    # num_scores = len(tally_scores)
+    # for i in range(num_scores):
+    #     for j in range(len(cell_filters_all)):
+    #         single_tally = openmc.Tally()
+    #         single_tally.name = tally_scores[i]+'_'+tally_nuclides[i]
+    #         if j == 1:  # pincells with flux suppressors in full core / quarter core - to ignore title in tallies
+    #             single_tally.name = single_tally.name+'_2'
+    #         single_tally.filters.append(cell_filters_all[j])
+    #         single_tally.filters.append(energy_filter)
+    #         single_tally.scores.append(tally_scores[i])
+    #         if tally_nuclides[i] != "All":
+    #             single_tally.nuclides = [tally_nuclides[i]]
+    #         tallies.append(single_tally)
     # # MESH filter
     # mesh = openmc.RegularMesh()
     # mesh.dimension = [40, 40, 1]
     # mesh.lower_left = [-4.0*FA5X5_total_sec, -4.0*FA5X5_total_sec, 0.0]
     # mesh.upper_right = [4.0*FA5X5_total_sec, 4.0*FA5X5_total_sec, core_height]
     # mesh_filter = openmc.MeshFilter(mesh)
-
     # ENERGY and MESH tallies
     # for tally_filter in [energy_filter, mesh_filter]:
     #     for i in range(num_scores):
@@ -1011,6 +996,19 @@ def gen_tallies(config):
     #         if tally_nuclides[i] is not "All":
     #             single_tally.nuclides = [tally_nuclides[i]]
     #         tallies.append(single_tally)
+    # Generate tallies
+    # Cell filter for homogenized pincell
+    # cell_filter = openmc.DistribcellFilter([161])  # pincell without flux suppressor
+    # tallies = openmc.Tallies()
+    # num_scores = len(tally_scores)
+    # for i in range(num_scores):
+    #     single_tally = openmc.Tally()
+    #     single_tally.name = tally_scores[i]+'_'+tally_nuclides[i]
+    #     single_tally.filters.append(cell_filter)
+    #     single_tally.scores.append(tally_scores[i])
+    #     if tally_nuclides[i] != "All":
+    #         single_tally.nuclides = [tally_nuclides[i]]
+    #     tallies.append(single_tally)
 
     return tallies
 
