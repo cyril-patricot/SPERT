@@ -2,8 +2,8 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 from pathlib import Path
 import os
-import spert_model as spert
-import spert_tallies_parse
+import spert.model as model
+import spert.tallies_parse as tallies_parse
 import openmc
 
 
@@ -34,10 +34,10 @@ def main(config_file='spert_config.ini', plot=False, run=False, model_type="full
     print("Tallies parsing: {}".format(config['tallies_parse']))
 
     # Generate materials dictionary
-    mats = spert.gen_materials(config)
+    mats = model.gen_materials(config)
 
     # Generate geometry
-    geom = spert.gen_geometry(mats, config)
+    geom = model.gen_geometry(mats, config)
     geom.export_to_xml()
 
     # Get all materials used in problem
@@ -57,17 +57,17 @@ def main(config_file='spert_config.ini', plot=False, run=False, model_type="full
     # Generate plots
 
     # Generate settings
-    settings = spert.gen_settings(config)
+    settings = model.gen_settings(config)
     settings.export_to_xml()
 
     # Generate tallies
     if config.getboolean('tallies_generate'):
-        tallies = spert.gen_tallies(config)
+        tallies = model.gen_tallies(config)
         tallies.export_to_xml()
 
     # Generate plots
     if plot:
-        plots = spert.gen_plots(mats)
+        plots = model.gen_plots(mats)
         plots.export_to_xml()
         openmc.plot_geometry()
 
@@ -77,7 +77,7 @@ def main(config_file='spert_config.ini', plot=False, run=False, model_type="full
 
     # Parse tallies
     if config.getboolean('tallies_parse'):
-        spert_tallies_parse.main()
+        tallies_parse.main()
 
 if __name__ == '__main__':
     ap = ArgumentParser(description="A configurable script for generating the SPERT-3 model")
