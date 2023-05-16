@@ -7,17 +7,7 @@ import spert_tallies_parse
 import openmc
 
 
-def main(config_file='spert_config.ini'):
-
-    ap = ArgumentParser(description="A configurable script for generating the SPERT-3 model")
-    ap.add_argument("-p", "--plot", default=False, action="store_true",
-                    help="If present, plot the model after generation.")
-    ap.add_argument("-r", "--run", default=False, action="store_true",
-                    help="If present, run OpenMC after generating the model")
-    ap.add_argument("-mt", "--model_type", type=str, default="full_core",
-                    help="Model type options: full_core, quarter_core, pincell, fuel_assembly, control_rod, transient_rod")
-    args = ap.parse_args()
-
+def main(config_file='spert_config.ini', plot=False, run=False, model_type="full_core"):
     # import configuration
     config = ConfigParser()
     # assume config file is in current location with script
@@ -27,7 +17,7 @@ def main(config_file='spert_config.ini'):
     else:
         config.read(Path(__file__).parent / config_file)
     config = config['SPERT_config']
-    config['model_type'] = args.model_type
+    config['model_type'] = model_type
 
     # Print config to screen
     print("Core configuration:")
@@ -76,21 +66,27 @@ def main(config_file='spert_config.ini'):
         tallies.export_to_xml()
 
     # Generate plots
-    if args.plot:
+    if plot:
         plots = spert.gen_plots(mats)
         plots.export_to_xml()
         openmc.plot_geometry()
 
     # Run Monte-Carlo simulation
-    if args.run:
-	    openmc.run()
+    if run:
+        openmc.run()
 
     # Parse tallies
     if config.getboolean('tallies_parse'):
         spert_tallies_parse.main()
 
 if __name__ == '__main__':
-    main()
+    ap = ArgumentParser(description="A configurable script for generating the SPERT-3 model")
+    ap.add_argument("-p", "--plot", default=False, action="store_true",
+                    help="If present, plot the model after generation.")
+    ap.add_argument("-r", "--run", default=False, action="store_true",
+                    help="If present, run OpenMC after generating the model")
+    ap.add_argument("-mt", "--model_type", type=str, default="full_core",
+                    help="Model type options: full_core, quarter_core, pincell, fuel_assembly, control_rod, transient_rod")
+    args = vars(ap.parse_args())
 
-
-
+    main(**args)
