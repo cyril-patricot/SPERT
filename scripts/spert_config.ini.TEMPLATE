@@ -10,8 +10,6 @@ TR_config: TR_config_TEMPLATE
 CR_config : CR_config_TEMPLATE
 # Core condition options: CZP (cold zero power) / HZP (hot zero power)
 core_condition : core_condition_TEMPLATE
-# Cross Sections path
-xs_lib : /home/kinast/xs_lib/jeff32_hdf5/cross_sections.xml
 # use S_alpha_beta
 use_sab : True
 # Settings

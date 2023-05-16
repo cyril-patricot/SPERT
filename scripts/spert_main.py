@@ -8,7 +8,7 @@ import openmc
 
 
 def main(config_file='spert_config.ini'):
-    
+
     ap = ArgumentParser(description="A configurable script for generating the SPERT-3 model")
     ap.add_argument("-p", "--plot", default=False, action="store_true",
                     help="If present, plot the model after generation.")
@@ -17,7 +17,7 @@ def main(config_file='spert_config.ini'):
     ap.add_argument("-mt", "--model_type", type=str, default="full_core",
                     help="Model type options: full_core, quarter_core, pincell, fuel_assembly, control_rod, transient_rod")
     args = ap.parse_args()
- 
+
     # import configuration
     config = ConfigParser()
     # assume config file is in current location with script
@@ -35,9 +35,9 @@ def main(config_file='spert_config.ini'):
     print("Core dimensions: {}".format(config['core_dimensions']))
     print("TR_config: {}".format(config['TR_config']))
     print("CR_config: {}".format(config['CR_config']))
-    print("Fuel temperature: {}".format(config['fuel_temp']))    
-    print("Core temperature: {}".format(config['core_temp']))        
-    print("XS library: {}".format(config['xs_lib']))
+    print("Fuel temperature: {}".format(config['fuel_temp']))
+    print("Core temperature: {}".format(config['core_temp']))
+    #print("XS library: {}".format(config['xs_lib']))
     print("Using SAB: {}".format(config['use_sab']))
     print("Tallies generate: {}".format(config['tallies_generate']))
     print("Tallies parsing: {}".format(config['tallies_parse']))
@@ -52,7 +52,7 @@ def main(config_file='spert_config.ini'):
     # Get all materials used in problem
     materials_out = geom.get_all_materials()
     materials_out_exp = openmc.Materials(materials_out.values())
-    materials_out_exp.cross_sections = config['xs_lib']
+    #materials_out_exp.cross_sections = config['xs_lib']
     materials_out_exp.export_to_xml()
 
     # Update mats dictionary
