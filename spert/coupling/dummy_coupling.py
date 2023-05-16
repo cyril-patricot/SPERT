@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import c3po
 
-from icoco_openmc import ICoCo_OpenMC
-from icoco_dummy_thermic import ICoCo_dummy_thermique
+from spert.coupling.icoco_openmc import ICoCo_OpenMC
+from spert.coupling.icoco_dummy_thermic import ICoCo_dummy_thermique
 
 
 class One_iteration(c3po.Coupler):

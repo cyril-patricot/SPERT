@@ -4,7 +4,7 @@ import openmc.lib
 import medcoupling as mc
 import c3po
 
-import med_builder
+import spert.coupling.med_builder as med_builder
 
 
 class ICoCo_OpenMC(c3po.PhysicsDriver):

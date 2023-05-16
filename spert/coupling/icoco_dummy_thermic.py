@@ -2,7 +2,7 @@
 import medcoupling as mc
 import c3po
 
-import med_builder
+import spert.coupling.med_builder as med_builder
 
 
 class ICoCo_dummy_thermique(c3po.PhysicsDriver):
