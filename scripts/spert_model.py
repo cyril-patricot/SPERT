@@ -1,6 +1,7 @@
 import numpy as np
 from pathlib import Path
 import openmc
+from iapws import IAPWS95 as wp
 
 energy_structure_filename = 'EG_SHEM_281.txt'
 energy_structure_path = Path(__file__).parent / energy_structure_filename
@@ -94,12 +95,17 @@ def gen_materials(config):
     """
 
     # Configuration Options
+    def F_to_K(T_F):  # Farenheit to Kelvin converter
+        return (T_F - 32) * 5/9 + 273.15
+
     use_sab = config.getboolean('use_sab')
-    fuel_temp = config.getint('fuel_temp')
-    core_temp = config.getint('core_temp')
-
+    fuel_temp = F_to_K(config.getfloat('fuel_temp'))
+    core_temp = F_to_K(config.getfloat('core_temp'))
+    water_temp = F_to_K(config.getfloat('water_temp'))
+    water_pressure = config.getfloat('water_pressure')    
+    
     materials = []
-
+        
     # fuel: UO2, 4.8% enrichment (table A.1)
     mat_fuel = openmc.Material(name='fuel', temperature=fuel_temp, material_id=1)
     mat_fuel.add_nuclide('U234', 9.515411E-06, 'ao')
@@ -110,19 +116,41 @@ def gen_materials(config):
     mat_fuel.set_density('sum')
     materials.append(mat_fuel)
 
-    # moderator: light water (table A.2)
-    mat_mod = openmc.Material(name='moderator', temperature=core_temp, material_id=2)
-    mat_mod.add_nuclide('H1',  6.625258E-02, 'ao')
-    mat_mod.add_nuclide('O16', 3.340031E-02, 'ao')
-    # TODO: apply temperature-dependent water density
-    # Specifically, for HZP (T=560F), atomic densities are: 
-    # H1: 5.091219E-02, O16: 2.545609E-02
+    # Moderator: light water (table A.2)
 
+    # Find atomic densities for CZP conditions: T=70F, P=1bar (14.5psig)
+    H1 = dict()
+    O16 = dict()
+    avogadro = 0.6022  # parts / cm-barn
+    H1['weight_fraction'] = 0.11111
+    O16['weight_fraction'] = 0.88889
+    H1['molar_mass'] = 1.008
+    O16['molar_mass'] = 15.995
+    water_density_CZP = 0.99803  # g/cm3
+    H1['mass_density_CZP'] = H1['weight_fraction'] * water_density_CZP
+    O16['mass_density_CZP'] = O16['weight_fraction'] * water_density_CZP    
+    H1['atom_density_CZP'] = H1['mass_density_CZP'] / H1['molar_mass'] * avogadro  # (parts / cm-barn)
+    O16['atom_density_CZP'] = O16['mass_density_CZP'] / O16['molar_mass'] * avogadro  # (parts / cm-barn)
+
+    # Use IAPWS to find water density based on temperature and pressure
+    mpa_to_psig = 145.03773800722  # constant to convert MPa to psig
+    water_pressure_mpa = water_pressure / mpa_to_psig  # water pressure in SPERT-3 experiment (units: MPa)
+    water_prop = wp(P=water_pressure_mpa, T=water_temp)
+    water_density = water_prop.rho / 1000  # density of liquid water [g/cm^3]
+    
+    # Correct atomic densities based on water density
+    density_corr_fact = water_density / water_density_CZP
+    H1['atom_density'] = H1['atom_density_CZP'] * density_corr_fact
+    O16['atom_density'] = O16['atom_density_CZP'] * density_corr_fact
+
+    mat_mod = openmc.Material(name='moderator', temperature=water_temp, material_id=2)
+    mat_mod.add_nuclide('H1',  H1['atom_density'], 'ao')
+    mat_mod.add_nuclide('O16', O16['atom_density'], 'ao')
     if use_sab:
         mat_mod.add_s_alpha_beta('c_H_in_H2O')
     mat_mod.set_density('sum')
     materials.append(mat_mod)
-
+    
     # Filler (and upper part of transient rod): SS304 stainless steel (table A.3)
     mat_filler = openmc.Material(name='filler', temperature=core_temp, material_id=3)
     mat_filler.add_nuclide('C0',   1.592403E-04, 'ao')
@@ -746,13 +774,10 @@ def gen_geometry(mat_dict, config):
         case 'control_rod':
             match config['CR_config']:
                 case 'CR_in':
-                    print('moo1')
                     root_univ = u31
                 case 'CR_out':
-                    print('moo2')
                     root_univ = u33
                 case 'CR_fs':
-                    print('moo3')
                     root_univ = u34
         case 'transient_rod':
             root_univ = u41
