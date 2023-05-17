@@ -7,5 +7,6 @@ name = "spert"
 version = "0.1"
 dependencies = [
     "numpy",
-     "salome-c3po==2.1.1",
+    "iapws",
+    "salome-c3po==2.1.1",
 ]
