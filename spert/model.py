@@ -102,7 +102,7 @@ def gen_materials(config):
     fuel_temp = F_to_K(config.getfloat('fuel_temp'))
     core_temp = F_to_K(config.getfloat('core_temp'))
     water_temp = F_to_K(config.getfloat('water_temp'))
-    water_pressure = config.getfloat('water_pressure')    
+    water_pressure = config.getfloat('water_pressure')  # assumg units: psig    
     
     materials = []
         
@@ -118,30 +118,23 @@ def gen_materials(config):
 
     # Moderator: light water (table A.2)
 
-    # Find atomic densities for CZP conditions: T=70F, P=1bar (14.5psig)
+    # Use IAPWS to find water density based on temperature and pressure
+    mpa_to_psig = 145.03773800722  # constant to convert pressure units MPa to psig
+    water_pressure_mpa = water_pressure / mpa_to_psig  # water pressure in SPERT-3 experiment (units: MPa)
+    water_prop = wp(P=water_pressure_mpa, T=water_temp)
+    water_density = water_prop.rho / 1000  # density of liquid water [g/cm^3]
+    # Find atomic densities for water
+    avogadro = 0.6022  # parts / cm-barn
     H1 = dict()
     O16 = dict()
-    avogadro = 0.6022  # parts / cm-barn
     H1['weight_fraction'] = 0.11111
     O16['weight_fraction'] = 0.88889
     H1['molar_mass'] = 1.008
     O16['molar_mass'] = 15.995
-    water_density_CZP = 0.99803  # g/cm3
-    H1['mass_density_CZP'] = H1['weight_fraction'] * water_density_CZP
-    O16['mass_density_CZP'] = O16['weight_fraction'] * water_density_CZP    
-    H1['atom_density_CZP'] = H1['mass_density_CZP'] / H1['molar_mass'] * avogadro  # (parts / cm-barn)
-    O16['atom_density_CZP'] = O16['mass_density_CZP'] / O16['molar_mass'] * avogadro  # (parts / cm-barn)
-
-    # Use IAPWS to find water density based on temperature and pressure
-    mpa_to_psig = 145.03773800722  # constant to convert MPa to psig
-    water_pressure_mpa = water_pressure / mpa_to_psig  # water pressure in SPERT-3 experiment (units: MPa)
-    water_prop = wp(P=water_pressure_mpa, T=water_temp)
-    water_density = water_prop.rho / 1000  # density of liquid water [g/cm^3]
-    
-    # Correct atomic densities based on water density
-    density_corr_fact = water_density / water_density_CZP
-    H1['atom_density'] = H1['atom_density_CZP'] * density_corr_fact
-    O16['atom_density'] = O16['atom_density_CZP'] * density_corr_fact
+    H1['mass_density'] = H1['weight_fraction'] * water_density
+    O16['mass_density'] = O16['weight_fraction'] * water_density    
+    H1['atom_density'] = H1['mass_density'] / H1['molar_mass'] * avogadro  # (parts / cm-barn)
+    O16['atom_density'] = O16['mass_density'] / O16['molar_mass'] * avogadro  # (parts / cm-barn)
 
     mat_mod = openmc.Material(name='moderator', temperature=water_temp, material_id=2)
     mat_mod.add_nuclide('H1',  H1['atom_density'], 'ao')
