@@ -2,3 +2,5 @@
 *.h5
 *.png
 *.out
+*.pyc
+*.egg-info
